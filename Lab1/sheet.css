@@ -1,0 +1,66 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Times New Roman", serif;
+    margin: 20px;
+}
+h1, h2 {
+    font-weight: bold;
+}
+.azure {
+    background-color: #eff;
+}
+main {
+    width: 600px;
+}
+header {
+    width: 100%;
+}
+footer {
+    width: 100%;
+    clear: both;
+}
+nav {
+    width: 200px;
+    margin-bottom: 10px;
+    display: inline-block;
+    vertical-align: top;
+}
+nav ul, aside ul {
+    list-style-position: inside;
+    padding-left: 15px;
+}
+nav li {
+    margin: 5px 0;
+}
+aside {
+    width: 300px;
+    float: right;
+    vertical-align: top;
+}
+a:link {
+    color: blue;
+}
+a:visited {
+    color: purple;
+}
+a:hover {
+    text-decoration: underline;
+}
+blockquote {
+    font-style: italic;
+    white-space: pre-line;
+    line-height: 1.5;
+    text-align: left;
+    margin-left: 20px;
+    padding: 10px;
+}
+.bordered {
+    border: 1px solid black;
+    box-shadow: 0px 0px 5px 0px #000;
+    padding: 10px;
+    margin-bottom: 10px;
+}
