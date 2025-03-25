@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USOS - Wydział Informatyki</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-blue-100 font-sans">
+    <nav class="bg-blue-300 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a class="text-xl font-bold text-black" href="#">USOS</a>
+            <button class="block lg:hidden text-black" id="menu-toggle">
+                &#9776;
+            </button>
+            <ul class="hidden lg:flex space-x-4" id="menu">
+                <li><a class="text-black hover:underline" href="#">Dziekanat</a></li>
+                <li><a class="text-black hover:underline" href="#">Studia stacjonarne</a></li>
+                <li><a class="text-black hover:underline" href="#">Studia niestacjonarne</a></li>
+                <li><a class="text-black hover:underline" href="#">Pracownicy</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-6 p-4">
+        <h1 class="text-center text-2xl font-bold">Wydział Informatyki</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+            <div class="bg-white shadow-md rounded-lg p-4 text-center">
+                <h2 class="font-bold">Jan Kowalski</h2>
+                <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Pracownik" class="w-24 mx-auto my-2">
+                <p>Pracownik</p>
+                <div class="bg-gray-200 p-2 mt-2 font-semibold">Karta 1</div>
+            </div>
+            <div class="bg-white shadow-md rounded-lg p-4 text-center">
+                <h2 class="font-bold">Anna Nowak</h2>
+                <p>Informatyka - Uczenie Maszynowe i Sztuczna Inteligencja</p>
+                <img src="https://cdn-icons-png.flaticon.com/512/1995/1995574.png" alt="Studentka" class="w-24 mx-auto my-2">
+                <p>Studentka</p>
+                <div class="bg-gray-200 p-2 mt-2 font-semibold">Karta 2</div>
+            </div>
+            <div class="bg-white shadow-md rounded-lg p-4 text-center">
+                <h2 class="font-bold">Jerzy Żmuda</h2>
+                <p>Informatyka - Data Science</p>
+                <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Student" class="w-24 mx-auto my-2">
+                <p>Student</p>
+                <div class="bg-gray-200 p-2 mt-2 font-semibold">Karta 3</div>
+            </div>
+        </div>
+        <footer class="bg-blue-300 text-center py-4 mt-6">
+            <a href="mailto:your.email.address" class="text-black">Adres email</a>
+        </footer>
+    </div>
+    
+    <script>
+        document.getElementById('menu-toggle').addEventListener('click', function () {
+            document.getElementById('menu').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
