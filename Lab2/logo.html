@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Logo aplikacji</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .logo-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Logo aplikacji</h1>
+
+    <div class="logo-container">
+        <canvas id="appLogo" width="400" height="400"></canvas>
+    </div>
+
+    <script>
+        "use strict";
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('appLogo');
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.beginPath();
+            ctx.arc(200, 140, 80, 0, Math.PI*2);
+            ctx.fillStyle = '#3498db';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(120, 200);
+            ctx.lineTo(280, 200);
+            ctx.lineTo(200, 340);
+            ctx.closePath();
+            ctx.fillStyle = '#e67e22';
+            ctx.fill();
+
+            ctx.fillStyle = '#2ecc71';
+            ctx.fillRect(160, 80, 80, 40);
+
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.fillText('USOS Project', 200, 380);
+        });
+    </script>
+</body>
+</html>
