@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USOS - System ocen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <img src="logo.png" alt="Logo" style="max-height: 40px; padding-right: 10px">
+            <a class="navbar-brand" href="usos.html">USOS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Przełącz nawigację">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="index.html">Dziekanat</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Studia stacjonarne</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Studia niestacjonarne</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Pracownicy</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h1 class="text-center">USOS - System ocen</h1>
+
+        <form id="ocenyForm">
+            <div class="mb-3">
+                <label for="inputData" class="form-label">Wprowadź dane: </label>
+                <input type="text" id="inputData"< class="form-control">
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success" id="dodajBtn">Dodaj</button>
+                <button type="button" class="btn btn-warning" id="zmienBtn">Zmień</button>
+                <button type="button" class="btn btn-primary" id="wyswietlBtn">Wyświetl</button>
+            </div>
+        </form>
+        <div id="komunikat" class="alert mt-3 d-none"></div>
+    </div>
+    <footer class="footer mt-5 py-3 bg-light text-center">
+        <div class="container">
+            <a href="mailto:your.email.address">Adres email</a>
+        </div>
+    </footer>
+
+    <script src="usos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
