@@ -1,0 +1,18 @@
+.counter-box {
+    background-color: #c8f7c5;
+    border: 1px solid #90c290;
+    padding: 1em;
+    margin: 1em 0;
+    border-radius: 10px;
+    width: 200px;
+}
+
+.counter-value {
+    color: red;
+    font-weight: bold;
+    font-size: 1.5em;
+}
+
+button {
+    margin-right: 5px;
+}
