@@ -1,0 +1,47 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# VS Code
+.vscode/
+out/styles/
+out/fonts/
+out/scripts/
+
+# OS/system
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Jest
+jest-test-results.json
+
+# Logs
+*.log
+logs/
+*.log.*
+log/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+*.swp
+*.swo
+*.bak
+
+# Environment files (jeśli korzystasz z .env)
+.env
+.env.local
+.env.*.local
