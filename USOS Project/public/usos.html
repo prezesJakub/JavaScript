@@ -28,8 +28,27 @@
     <div class="container mt-4">
         <h1 class="text-center">USOS - System ocen</h1>
 
+        <p><a href="index.html">Dodaj nowego studenta</a></p>
+
         <div id="komunikat" class="alert mt-3 d-none"></div>
         <div id="kartyStudenci" class="row mt-4"></div>
+
+        <h2 class="text-center mt-4">Dodaj ocenę studentowi</h2>
+        <form id="formOcena" class="mt-3">
+            <div class="mb-3">
+                <label for="studentIndex" class="form-label">Nr studenta (indeks na liście)</label>
+                <input type="number" class="form-control" id="studentIndex" name="studentIndex" required>
+            </div>
+            <div class="mb-3">
+                <label for="przedmiot" class="form-label">Przedmiot</label>
+                <input type="text" class="form-control" id="przedmiot" name="przedmiot" required>
+            </div>
+            <div class="mb-3">
+                <label for="ocena" class="form-label">Ocena</label>
+                <input type="number" class="form-control" id="ocena" name="ocena" min="2" max="5" step="0.5" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Dodaj ocenę</button>
+        </form>
     </div>
     <footer class="footer mt-5 py-3 bg-light text-center">
         <div class="container">

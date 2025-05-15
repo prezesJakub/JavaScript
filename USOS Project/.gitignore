@@ -1,0 +1,32 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# dotenv (jeśli dodasz plik .env)
+.env
+
+# IDE i edytory
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Systemowe
+.DS_Store
+Thumbs.db
+
+# Przesyłane pliki (zdjęcia)
+uploads/
+
+# Pliki danych użytkownika (dynamika projektu)
+data/students.json
+
+# Tymczasowe pliki Formidable (opcjonalnie)
+*.tmp
+
+# Logi aplikacji (jeśli je generujesz)
+logs/
+*.log

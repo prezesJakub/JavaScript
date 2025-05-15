@@ -28,40 +28,26 @@
 
     <div class="container mt-4">
         <h1 class="text-center">Wydział Informatyki</h1>
-        <div class="row">
-            <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <div class="card">
-                    <div class="card-header text-center">Jan Kowalski</div>
-                    <div class="card-body text-center">
-                        <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Pracownik" class="img-fluid" style="max-width: 100px;">
-                        <p class="card-text">Pracownik</p>
-                    </div>
-                    <div class="card-footer text-center">Karta 1</div>
-                </div>
+        <h2>Dodaj studenta</h2>
+        <form id="studentForm" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="imie" class="form-label">Imię</label>
+                <input type="text" class="form-control" name="imie" required>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <div class="card">
-                    <div class="card-header text-center">Anna Nowak</div>
-                    <div class="card-body text-center">
-                        <p class="card-text">Informatyka - Uczenie Maszynowe i Sztuczna Inteligencja</p>
-                        <img src="https://cdn-icons-png.flaticon.com/512/1995/1995574.png" alt="Studentka" class="img-fluid" style="max-width: 100px;">
-                        <p class="card-text">Studentka</p>
-                    </div>
-                    <div class="card-footer text-center">Karta 2</div>
-                </div>
+            <div class="mb-3">
+                <label for="nazwisko" class="form-label">Nazwisko</label>
+                <input type="text" class="form-control" name="nazwisko" required>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 mb-3">
-                <div class="card">
-                    <div class="card-header text-center">Jerzy Żmuda</div>
-                    <div class="card-body text-center">
-                        <p class="card-text">Informatyka - Data Science</p>
-                        <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Student" class="img-fluid" style="max-width: 100px;">
-                        <p class="card-text">Student</p>
-                    </div>
-                    <div class="card-footer text-center">Karta 3</div>
-                </div>
+            <div class="mb-3">
+                <label for="zdjecie" class="form-label">Zdjęcie</label>
+                <input type="file" class="form-control" name="zdjecie" accept="image/*" required>
             </div>
-        </div>
+            <button type="submit" class="btn btn-primary">Dodaj studenta</button>
+        </form>
+
+        <div id="komunikat" class="alert mt-3 d-none"></div>
+
+        <p><a href="usos.html">Zobacz listę studentów</a></p>
         <footer class="footer mt-5 py-3 bg-light text-center">
             <div class="container">
                 <a href="mailto:your.email.address">Adres email</a>
@@ -69,6 +55,32 @@
         </footer>
     </div>
     
+    <script>
+    document.getElementById("studentForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+
+        fetch("/add-student", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.text())
+        .then(responseText => {
+            const alertBox = document.getElementById("komunikat");
+            alertBox.classList.remove("d-none", "alert-danger");
+            alertBox.classList.add("alert-success");
+            alertBox.textContent = "Student został dodany.";
+            form.reset();
+        })
+        .catch(error => {
+            const alertBox = document.getElementById("komunikat");
+            alertBox.classList.remove("d-none", "alert-success");
+            alertBox.classList.add("alert-danger");
+            alertBox.textContent = "Błąd podczas dodawania studenta.";
+        });
+    });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
