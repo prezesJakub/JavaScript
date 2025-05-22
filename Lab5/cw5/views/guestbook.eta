@@ -1,0 +1,22 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title><%= it.title %></title>
+</head>
+<body>
+    <main>
+        <h1><%= it.title %></h1>
+        <ul>
+            <% it.entries.forEach(e => { %>
+            <li><strong><%= e.name %></strong>: <%= e.message %></li>
+            <% }) %>
+        </ul>
+        <hr>
+        <form method="POST" action="/" enctype="application/x-www-form-urlencoded">
+            <label>Name: <input name="name" required></label><br>
+            <label>Message: <input name="message" required></label><br>
+            <input type="submit" value="Add Entry">
+        </form>
+    </main>
+</body>
+</html>
