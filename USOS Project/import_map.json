@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "oak/": "https://deno.land/x/oak@v12.6.1/",
+    "eta": "https://deno.land/x/eta@v2.0.0/mod.ts",
+    "formidable": "npm:formidable@2.1.1"
+  }
+}

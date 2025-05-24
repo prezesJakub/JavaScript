@@ -1,110 +1,146 @@
-document.addEventListener("DOMContentLoaded", () => {
-    fetch('/api/students')
-        .then(res => res.json())
-        .then(students => {
-            const container = document.getElementById("kartyStudenci");
-            students.forEach((student, index) => {
-                const div = document.createElement("div");
-                div.className = "col-md-4 mb-4";
-                div.innerHTML = `
-                    <div class="card h-100">
-                        <div class="card-header text-center">${student.imie} ${student.nazwisko}</div>
-                        <div class="card-body text-center">
-                            <img src="/uploads/${student.zdjecie}" alt="Zdjęcie" class="img-fluid rounded-circle mb-3 shadow" style="max-width: 250px; max-height: 250px; object-fit: cover;">
-                            <p class="card-text">${formatOceny(student.oceny, index)}</p>
-                        </div>
-                        <div class="card-footer text-center">Student nr ${index}</div>    
-                    </div>
-                `;
-                container.appendChild(div);
+const form = document.getElementById("formOcena");
+const komunikat = document.getElementById("komunikat");
+
+if (form && komunikat) {
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch("/add-grade", {
+                method: "POST",
+                body: formData,
             });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                komunikat.textContent = "Błąd: " + errorText;
+                komunikat.classList.remove("d-none", "alert-success");
+                komunikat.classList.add("alert-danger");
+                return;
+            }
+
+            komunikat.textContent = "Ocena dodana pomyślnie!";
+            komunikat.classList.remove("d-none", "alert-danger");
+            komunikat.classList.add("alert-success");
+
+            const studentId = formData.get("studentId");
+            const przedmiot = formData.get("przedmiot");
+            const ocena = formData.get("ocena");
+
+            const studentCard = document.querySelector(`[data-student-id="${studentId}"]`);
+            if (studentCard) {
+                const ulOceny = studentCard.querySelector("ul");
+                if (ulOceny) {
+                    const brakOcenLi = ulOceny.querySelector("li");
+                    if (brakOcenLi && brakOcenLi.textContent === "Brak ocen") {
+                        brakOcenLi.remove();
+                    }
+                    const li = document.createElement("li");
+                    li.innerHTML = `${przedmiot}: ${ocena} `;
+
+                    const editBtn = document.createElement("button");
+                    editBtn.classList.add("btn", "btn-sm", "btn-warning", "ms-2", "edit-grade-btn");
+                    editBtn.textContent = "Edytuj";
+                    editBtn.dataset.studentId = studentId;
+                    editBtn.dataset.index = ulOceny.children.length;
+                    editBtn.dataset.przedmiot = przedmiot;
+                    editBtn.dataset.ocena = ocena;
+                    editBtn.addEventListener("click", () => {
+                        document.getElementById('editStudentId').value = editBtn.dataset.studentId;
+                        document.getElementById('editGradeIndex').value = editBtn.dataset.index;
+                        document.getElementById('editPrzedmiot').value = editBtn.dataset.przedmiot;
+                        document.getElementById('editOcena').value = editBtn.dataset.ocena;
+                        const modal = new bootstrap.Modal(document.getElementById('editGradeModal'));
+                        modal.show();
+                    });
+
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.classList.add("btn", "btn-sm", "btn-danger", "ms-1", "delete-grade-btn");
+                    deleteBtn.textContent = "Usuń";
+                    deleteBtn.dataset.studentId = studentId;
+                    deleteBtn.dataset.gradeIndex = ulOceny.children.length;
+                    deleteBtn.addEventListener("click", async () => {
+                        if (!confirm("Na pewno chcesz usunąć ocenę?")) return;
+
+                        const res = await fetch('/delete-grade', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ studentId, gradeIndex: deleteBtn.dataset.gradeIndex })
+                        });
+
+                        if (res.ok) {
+                            li.remove();
+                        } else {
+                            alert('Błąd podczas usuwania oceny');
+                        }
+                    });
+
+                    li.appendChild(editBtn);
+                    li.appendChild(deleteBtn);
+                    ulOceny.appendChild(li);
+                }
+            }
+            form.reset();
+        } catch (err) {
+            komunikat.textContent = "Błąd sieci: " + err.message;
+            komunikat.classList.remove("d-none", "alert-success");
+            komunikat.classList.add("alert-danger");
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = new bootstrap.Modal(document.getElementById('editGradeModal'));
+
+    document.querySelectorAll('.edit-grade-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('editStudentId').value = button.dataset.studentId;
+            document.getElementById('editGradeIndex').value = button.dataset.index;
+            document.getElementById('editPrzedmiot').value = button.dataset.przedmiot;
+            document.getElementById('editOcena').value = button.dataset.ocena;
+            modal.show();
         });
-});
+    });
 
-function formatOceny(oceny, studentIndex) {
-    if (!oceny || oceny.length === 0) return "Brak ocen";
-    return oceny.map((o, i) => `
-        <div>
-            ${o.przedmiot}: ${o.ocena}
-            <button onclick="usunOcene(${studentIndex}, ${i})" class="btn btn-sm btn-danger ms-2">Usuń</button>
-            <button onclick="edytujOcene(${studentIndex}, ${i}, '${o.przedmiot}', ${o.ocena})" class="btn btn-sm btn-warning ms-1">Edytuj</button>
-        </div>
-    `).join("");
-}
+    document.getElementById('editGradeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const studentId = document.getElementById('editStudentId').value;
+        const gradeIndex = document.getElementById('editGradeIndex').value;
+        const przedmiot = document.getElementById('editPrzedmiot').value;
+        const ocena = document.getElementById('editOcena').value;
 
-document.getElementById("formOcena").addEventListener("submit", function (e) {
-    e.preventDefault();
+        const res = await fetch('/edit-grade', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId, gradeIndex, przedmiot, ocena })
+        });
 
-    const studentIndex = document.getElementById("studentIndex").value;
-    const przedmiot = document.getElementById("przedmiot").value.trim();
-    const ocena = parseFloat(document.getElementById("ocena").value);
+        if (res.ok) {
+            window.location.reload();
+        } else {
+            alert('Błąd podczas edytowania oceny');
+        }
+    });
 
-    const formData = new URLSearchParams();
-    formData.append("index", studentIndex);
-    formData.append("przedmiot", przedmiot);
-    formData.append("ocena", ocena);
+    document.querySelectorAll('.delete-grade-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            if (!confirm("Na pewno chcesz usunąć ocenę?")) return;
+            const studentId = button.dataset.studentId;
+            const gradeIndex = button.dataset.gradeIndex;
 
-    fetch("/add-grade", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-    })
-    .then(res => res.text())
-    .then(msg => {
-        alert(msg);
-        location.reload();
-    })
-    .catch(err => {
-        alert("Błąd dodawania oceny");
-        console.error(err);
+            const res = await fetch('/delete-grade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentId, gradeIndex })
+            });
+
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert('Błąd podczas usuwania oceny');
+            }
+        });
     });
 });
-
-function usunOcene(studentIndex, gradeIndex) {
-    const formData = new URLSearchParams();
-    formData.append("studentIndex", studentIndex);
-    formData.append("gradeIndex", gradeIndex);
-
-    fetch("/delete-grade", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-    })
-    .then(res => res.text())
-    .then(msg => {
-        alert(msg);
-        location.reload();
-    })
-    .catch(err => {
-        alert("Błąd usuwania oceny");
-        console.error(err);
-    });
-}
-
-function edytujOcene(studentIndex, gradeIndex, przedmiot, ocena) {
-    const nowyPrzedmiot = prompt("Nowy przedmiot:", przedmiot);
-    const nowaOcena = parseFloat(prompt("Nowa ocena:", ocena));
-
-    if (!nowyPrzedmiot || isNaN(nowaOcena)) return;
-
-    const formData = new URLSearchParams();
-    formData.append("studentIndex", studentIndex);
-    formData.append("gradeIndex", gradeIndex);
-    formData.append("przedmiot", nowyPrzedmiot);
-    formData.append("ocena", nowaOcena);
-
-    fetch("/edit-grade", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-    })
-    .then(res => res.text())
-    .then(msg => {
-        alert(msg);
-        location.reload();
-    })
-    .catch(err => {
-        alert("Błąd edytowania oceny");
-        console.error(err);
-    });
-}

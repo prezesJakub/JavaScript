@@ -1,0 +1,16 @@
+{
+  "imports": {
+    "oak/": "https://deno.land/x/oak@v10.0.0/",
+    "std/": "https://deno.land/std@0.203.0/"
+  },
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "start": "deno run --allow-net --allow-read --allow-write --allow-env server.ts"
+  },
+  "compilerOptions": {
+    "strict": true
+  },
+  "unstable": [
+    "sloppy-imports"
+  ]
+}

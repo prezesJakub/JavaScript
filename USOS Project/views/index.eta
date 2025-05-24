@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= it.title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <img src="/logo.png" alt="Logo" style="max-height: 40px; padding-right: 10px">
+            <a class="navbar-brand" href="/usos">USOS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="/">Dziekanat</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Studia stacjonarne</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Studia niestacjonarne</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Pracownicy</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <h1 class="text-center">Wydział Informatyki</h1>
+        <h2>Dodaj studenta</h2>
+
+        <form id="studentForm" enctype="multipart/form-data" method="POST" action="/add-student">
+            <div class="mb-3">
+                <label for="imie" class="form-label">Imię</label>
+                <input type="text" class="form-control" name="imie" required>
+            </div>
+            <div class="mb-3">
+                <label for="nazwisko" class="form-label">Nazwisko</label>
+                <input type="text" class="form-control" name="nazwisko" required>
+            </div>
+            <div class="mb-3">
+                <label for="zdjecie" class="form-label">Zdjęcie</label>
+                <input type="file" class="form-control" name="zdjecie" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Dodaj studenta</button>
+        </form>
+
+        <div id="komunikat" class="alert mt-3 d-none"></div>
+
+        <p><a href="/usos">Zobacz listę studentów</a></p>
+
+        <script>
+        document.getElementById("studentForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+
+            fetch("/add-student", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.text())
+            .then(responseText => {
+                const alertBox = document.getElementById("komunikat");
+                alertBox.classList.remove("d-none", "alert-danger");
+                alertBox.classList.add("alert-success");
+                alertBox.textContent = "Student został dodany.";
+                form.reset();
+            })
+            .catch(error => {
+                const alertBox = document.getElementById("komunikat");
+                alertBox.classList.remove("d-none", "alert-success");
+                alertBox.classList.add("alert-danger");
+                alertBox.textContent = "Błąd podczas dodawania studenta.";
+            });
+        });
+        </script>
+    </main>
+
+    <footer class="footer mt-5 py-3 bg-light text-center">
+        <div class="container">
+            <a href="mailto:your.email.address">Adres email</a>
+        </div>
+    </footer>
+
+    <% if (it.customScript) { %>
+        <script src="<%= it.customScript %>"></script>
+    <% } %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

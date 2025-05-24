@@ -1,4 +1,5 @@
-use("AGH");
+const db = db.getSiblingDB("AGH");
+db.getName();
 
 db.createCollection("students");
 
@@ -11,3 +12,5 @@ db.students.insertMany([
 
 db.students.find({ faculty: "WIET" });
 db.students.find().pretty();
+
+db.getName();
