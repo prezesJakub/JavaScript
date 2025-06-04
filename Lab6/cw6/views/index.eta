@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- @author Stanisław Polak <polak@agh.edu.pl> -->
 <html lang="en">
   <head>
     <meta charset="UTF-8">
@@ -127,7 +126,7 @@
       /* response_type ∈ ["text", "json", "xml"]                                            */ 
       /* name — Contents of the form's text box — data that needs to be sent asynchronously */
       /**************************************************************************************/
-      function requestFetchAPI(http_method, response_type, name, show_alert=false) {
+      async function requestFetchAPI(http_method, response_type, name, show_alert=false) {
           let accept = '*/*';
       
           switch(response_type){
@@ -141,9 +140,11 @@
           //--------------------------------------------------------------------------
           // Configuration and execution of the (asynchronous) query to the web server
           //--------------------------------------------------------------------------
-              ((http_method) => {
-                  if(http_method === 'GET')
-                      return fetch(`http://localhost:8000/submit?name=${encodeURIComponent(name)}`, {
+          try {
+            let response;
+
+            if(http_method === 'GET') {
+                      response = await fetch(`http://localhost:8000/submit?name=${encodeURIComponent(name)}`, {
                           method: 'GET',
                           credentials: "include", // DO NOT MODIFY OR REMOVE
                           headers: {
@@ -153,54 +154,47 @@
                               Accept: accept
                           }
                       });
-                  if(http_method === 'POST')
-                      return fetch('http://localhost:8000/submit', {
-                          method: 'POST',
-                          credentials: "include", // // DO NOT MODIFY OR REMOVE
-                          body: `name=${encodeURIComponent(name)}`,
-                          headers: {
-                              'Content-Type': 'application/x-www-form-urlencoded',
-                              Accept: accept
-                          }
-                  });
-      
-          })(http_method) // a promise is returned
-          .then(function (response) { // if the promise is fulfilled
-              if (!response.ok)
-                  throw Error(response.statusText);
-      
-              console.group('Fetch API');
-              console.log(`HTTP method ⟶\t\t${http_method}\nResponse type ⟶\t${response_type}\nInput data ⟶\t\t${name}`);
-              let result;
-      
-              if (!response.headers.get('content-type')?.includes('application/json')) {
-                  // If the received data is plain text or an XML document
-                  result = response.text(); 
-              }
-              else {
-                  //If the received data is a JSON document
-                  result = response.json();
-              }
-              console.log(result);
-              console.groupEnd();   
-              if (show_alert) {
-                result.then(res => {
-                    const out = document.getElementById("output");
-                    if (typeof res === 'object') {
-                        out.innerText = JSON.stringify(res, null, 2); // pretty JSON
-                    } else {
-                        out.innerText = res;
-                    }
+            } else {
+                response = await fetch('http://localhost:8000/submit', {
+                  method: 'POST',
+                  credentials: "include",
+                  body: `name=${encodeURIComponent(name)}`,
+                  headers: {
+                      'Content-Type': 'application/x-www-form-urlencoded',
+                      Accept: accept
+                  }
                 });
             }
-              else {
+
+            if (!response.ok) throw new Error(response.statusText);
+
+            let result;
+            const contentType = response.headers.get('content-type') || '';
+            if(contentType.includes('application/json')) {
+              result = await response.json();
+            } else {
+              result = await response.text();
+            }
+            
+            console.group('Fetch API (await)');
+            console.log(`HTTP method ⟶\t\t${http_method}\nResponse type ⟶\t${response_type}\nInput data ⟶\t\t${name}`);
+            console.log(result);
+            console.groupEnd();
+
+            if (show_alert) {
+              const out = document.getElementById("output");
+              if (typeof result === 'object') {
+                  out.innerText = JSON.stringify(result, null, 2);
+              } else {
+                  out.innerText = result;
+              }
+            } else {
                   results.set(`fetch ${http_method} ${response_type}`, result);
                   dispatchEvent(received);
-              }
-          })
-          .catch(function (error) { // if the promise is rejected
-              window.alert(error);
-          });
+            }
+        } catch (error) {
+          window.alert(`Błąd: ${error.message}`);
+        }
       }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/mocha/mocha.js"> </script>
@@ -272,6 +266,10 @@
         </tr>
       </table>
       <div id="output" style="margin-top: 1em; border: 1px solid #ccc; padding: 1em;"></div>
+      <h2>Check Time in European City</h2>
+      <input type="text" id="city" placeholder="Enter European city" />
+      <button onclick="checkTime()">Get Time</button>
+      <div id="time_output" style="margin-top: 1em; border: 1px solid #aaa; padding: 1em;"></div>
     </main>
     <h1>Unit tests</h1>
     <button onclick="window.location.reload();">Restart</button>
@@ -361,7 +359,38 @@
               mocha.run();
               test_executed = true;
           }
-      });        
+      }); 
+
+      function getTime(europe_city) {
+          return new Promise(async (resolve, reject) => {
+              try {
+                  const response = await fetch(`https://worldtimeapi.org/api/timezone/Europe/${encodeURIComponent(europe_city)}`);
+                  const data = await response.json();
+
+                  if (response.status === 200) {
+                      resolve(data);
+                  } else if (response.status === 404) {
+                      reject(data.error || "City not found");
+                  } else {
+                      reject(`Unexpected status: ${response.status}`);
+                  }
+              } catch (error) {
+                  reject(`Network error: ${error.message}`);
+              }
+          });
+      }
+
+      async function checkTime() {
+          const city = document.getElementById('city').value;
+          const outputDiv = document.getElementById('time_output');
+
+          try {
+              const data = await getTime(city);
+              outputDiv.innerText = `Current time in ${city}: ${data.datetime}`;
+          } catch (error) {
+              outputDiv.innerText = `Error: ${error}`;
+          }
+      }       
     </script>
   </body>
 </html>
