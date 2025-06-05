@@ -1,6 +1,7 @@
 import { Application, Router, Context, send } from "https://deno.land/x/oak@v10.0.0/mod.ts";
 import { ensureDir } from "https://deno.land/std/fs/mod.ts";
 import { renderFile } from "https://deno.land/x/eta@v2.2.0/mod.ts";
+import { XMLParser } from "npm:fast-xml-parser";
 import { configure } from "https://deno.land/x/eta@v2.2.0/mod.ts";
 import { basename, extname, join } from "https://deno.land/std/path/mod.ts";
 import { MongoClient, Database, Bson } from "https://deno.land/x/mongo@v0.31.1/mod.ts";
@@ -28,6 +29,22 @@ interface StudentSchema {
     nazwisko: string;
     zdjecie: string;
     oceny: Ocena[];
+}
+
+function parseXML<T = any>(xmlString: string): T | null {
+    const parser = new XMLParser({
+        ignoreAttributes: false,
+        ignoreDeclaration: true,
+        parseTagValue: true,
+        trimValues: true
+    });
+
+    try {
+        return parser.parse(xmlString);
+    } catch (error) {
+        console.error("Błąd parsowania XML:", error);
+        return null;
+    }
 }
 
 const router = new Router();
@@ -97,6 +114,30 @@ router
         ctx.response.body = result;
     })
 
+    .get("/students-xml", async (ctx: Context) => {
+        const students = await studentsCollection.find({}).toArray();
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    <students>
+        ${students.map(student => `
+        <student>
+            <id>${student._id.toString()}</id>
+            <imie>${student.imie}</imie>
+            <nazwisko>${student.nazwisko}</nazwisko>
+            <zdjecie>${student.zdjecie}</zdjecie>
+            <oceny>
+                ${student.oceny.map(o => `
+                    <ocena>
+                        <przedmiot>${o.przedmiot}</przedmiot>
+                        <wartosc>${o.ocena}</wartosc>
+                    </ocena>`).join("")}
+            </oceny>
+        </student>`).join("")}
+    </students>`;
+    
+        ctx.response.headers.set("Content-Type", "application/xml");
+        ctx.response.body = xml;
+    })
+
     .post("/add-student", async (ctx: Context) => { 
         try {
             const contentType = ctx.request.headers.get("content-type") || "";
@@ -159,6 +200,47 @@ router
         }
     })
 
+    .post("/add-student-xml", async (ctx: Context) => {
+        const bodyText = await ctx.request.body({ type: "text" }).value;
+        
+        try {
+            const doc = parseXML(bodyText);
+
+            if (!doc) {
+                ctx.response.status = 400;
+                ctx.response.body = "<response>Nieprawidłowy XML</response>";
+                return;
+            }
+            
+            const imie = doc?.student?.imie;
+            const nazwisko = doc?.student?.nazwisko;
+            const zdjecie = doc?.student?.zdjecie || "";
+
+            if (!imie || !nazwisko) {
+                ctx.response.status = 400;
+                ctx.response.body = "<response>Brakuje wymaganych pól</response>";
+                return;
+            }
+
+            const newStudent: StudentSchema = {
+                _id: new Bson.ObjectId(),
+                imie,
+                nazwisko,
+                zdjecie,
+                oceny: [],
+            };
+
+            await studentsCollection.insertOne(newStudent);
+
+            ctx.response.headers.set("Content-Type", "application/xml");
+            ctx.response.body = `<response>Student dodany</response>`;
+        } catch (error) {
+            console.error("Błąd parsowania XML:", error);
+            ctx.response.status = 400;
+            ctx.response.body = "Nieprawidłowy format XML";
+        }  
+    })
+
     .post("/add-grade", async (ctx) => {
         const contentType = ctx.request.headers.get("content-type") || "";
         if (!contentType.includes("multipart/form-data")) {
@@ -194,6 +276,50 @@ router
         ctx.response.body = "Ocena dodana";
     })
 
+    .post("/add-grade-xml", async (ctx: Context) => {
+        const bodyText = await ctx.request.body({ type: "text" }).value;
+
+        try {
+            const doc = parseXML(bodyText);
+
+            if (!doc) {
+                ctx.response.status = 400;
+                ctx.response.body = "Nieprawidłowy XML";
+                return;
+            }
+
+            const studentId = doc?.grade?.studentId;
+            const przedmiot = doc?.grade?.przedmiot;
+            const ocenaText = doc?.grade?.ocena;
+            const ocena = parseFloat(ocenaText || "");
+
+            if (!studentId || !przedmiot || isNaN(ocena)) {
+                ctx.response.status = 400;
+                ctx.response.body = "Nieprawidłowe dane";
+                return;
+            }
+
+            const _id = new Bson.ObjectId(studentId);
+            const student = await studentsCollection.findOne({ _id });
+
+            if (!student) {
+                ctx.response.status = 404;
+                ctx.response.body = "Student nie znaleziony";
+                return;
+            }
+
+            student.oceny.push({ przedmiot, ocena });
+            await studentsCollection.updateOne({ _id }, { $set: { oceny: student.oceny } });
+
+            ctx.response.headers.set("Content-Type", "application/xml");
+            ctx.response.body = `<response>Ocena dodana</response>`;
+        } catch (error) {
+            console.error("Błąd parsowania XML:", error);
+            ctx.response.status = 400;
+            ctx.response.body = "Nieprawidłowy format XML";
+        }
+    })
+
     .post("/delete-grade", async (ctx: Context) => {
         const { studentId, gradeIndex } = await ctx.request.body({ type: "json" }).value;
 
@@ -218,6 +344,48 @@ router
         ctx.response.body = "Ocena usunięta";
     })
 
+    .post("/delete-grade-xml", async (ctx: Context) => {
+        const bodyText = await ctx.request.body({ type: "text" }).value;
+        
+        try {
+            const doc = parseXML(bodyText);
+
+            if (!doc) {
+                ctx.response.status = 400;
+                ctx.response.body = "Nieprawidłowy XML";
+                return;
+            }
+
+            const studentId = doc?.grade?.studentId;
+            const gradeIndex = parseInt(doc?.grade?.gradeIndex || "");
+
+            if(!studentId || isNaN(gradeIndex)) {
+                ctx.response.status = 400;
+                ctx.response.body = "Nieprawidłowe dane";
+                return;
+            }
+
+            const _id = new Bson.ObjectId(studentId);
+            const student = await studentsCollection.findOne({ _id });
+
+            if(!student || !student.oceny[gradeIndex]) {
+                ctx.response.status = 404;
+                ctx.response.body = "Nie znaleziono studenta lub oceny";
+                return;
+            }
+
+            student.oceny.splice(gradeIndex, 1);
+            await studentsCollection.updateOne({ _id }, { $set: { oceny: student.oceny } });
+
+            ctx.response.headers.set("Content-Type", "application/xml");
+            ctx.response.body = `<response>Ocena usunięta</response>`;
+        } catch (error) {
+            console.error("Błąd parsowania XML:", error);
+            ctx.response.status = 400;
+            ctx.response.body = "Nieprawidłowy format XML";
+        }
+    })
+
     .post("/edit-grade", async (ctx: Context) => {
         const { studentId, gradeIndex, przedmiot, ocena } = await ctx.request.body({ type: "json" }).value;
 
@@ -240,6 +408,50 @@ router
         await studentsCollection.updateOne({ _id }, { $set: { oceny: student.oceny } });
 
         ctx.response.body = "Ocena zmodyfikowana";
+    })
+
+    .post("/edit-grade-xml", async (ctx: Context) => {
+        const bodyText = await ctx.request.body({ type: "text" }).value;
+
+        try {
+            const doc = parseXML(bodyText);
+
+            if (!doc) {
+                ctx.response.status = 400;
+                ctx.response.body = "Nieprawidłowy XML";
+                return;
+            }
+
+            const studentId = doc?.grade?.studentId;
+            const gradeIndex = parseInt(doc?.grade?.gradeIndex || "");
+            const przedmiot = doc?.grade?.przedmiot;
+            const ocena = parseFloat(doc?.grade?.ocena || "");
+
+            if (!studentId || isNaN(gradeIndex) || !przedmiot || isNaN(ocena)) {
+                ctx.response.status = 400;
+                ctx.response.body = "<response>Nieprawidłowe dane</response>";
+                return;
+            }
+
+            const _id = new Bson.ObjectId(studentId);
+            const student = await studentsCollection.findOne({ _id });
+
+            if (!student || !student.oceny[gradeIndex]) {
+                ctx.response.status = 404;
+                ctx.response.body = "<response>Nie znaleziono studenta lub oceny</response>";
+                return;
+            }
+
+            student.oceny[gradeIndex] = { przedmiot, ocena };
+            await studentsCollection.updateOne({ _id }, { $set: { oceny: student.oceny } });
+
+            ctx.response.headers.set("Content-Type", "application/xml");
+            ctx.response.body = `<response>Ocena zmieniona</response>`;
+        } catch (error) {
+            console.error("Błąd parsowania XML:", error);
+            ctx.response.status = 400;
+            ctx.response.body = "<response>Nieprawidłowy format XML</response>";
+        }
     })
 
     .get("/uploads/:filename", async (ctx: Context) => {

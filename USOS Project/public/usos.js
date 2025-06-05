@@ -1,106 +1,111 @@
-const form = document.getElementById("formOcena");
-const komunikat = document.getElementById("komunikat");
-
-if (form && komunikat) {
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(form);
-
-        try {
-            const response = await fetch("/add-grade", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                komunikat.textContent = "Błąd: " + errorText;
-                komunikat.classList.remove("d-none", "alert-success");
-                komunikat.classList.add("alert-danger");
-                return;
-            }
-
-            komunikat.textContent = "Ocena dodana pomyślnie!";
-            komunikat.classList.remove("d-none", "alert-danger");
-            komunikat.classList.add("alert-success");
-
-            const studentId = formData.get("studentId");
-            const przedmiot = formData.get("przedmiot");
-            const ocena = formData.get("ocena");
-
-            const studentCard = document.querySelector(`[data-student-id="${studentId}"]`);
-            if (studentCard) {
-                const ulOceny = studentCard.querySelector("ul");
-                if (ulOceny) {
-                    const brakOcenLi = ulOceny.querySelector("li");
-                    if (brakOcenLi && brakOcenLi.textContent === "Brak ocen") {
-                        brakOcenLi.remove();
-                    }
-                    const li = document.createElement("li");
-                    li.innerHTML = `${przedmiot}: ${ocena} `;
-
-                    const editBtn = document.createElement("button");
-                    editBtn.classList.add("btn", "btn-sm", "btn-warning", "ms-2", "edit-grade-btn");
-                    editBtn.textContent = "Edytuj";
-                    editBtn.dataset.studentId = studentId;
-                    editBtn.dataset.index = ulOceny.children.length;
-                    editBtn.dataset.przedmiot = przedmiot;
-                    editBtn.dataset.ocena = ocena;
-                    editBtn.addEventListener("click", () => {
-                        document.getElementById('editStudentId').value = editBtn.dataset.studentId;
-                        document.getElementById('editGradeIndex').value = editBtn.dataset.index;
-                        document.getElementById('editPrzedmiot').value = editBtn.dataset.przedmiot;
-                        document.getElementById('editOcena').value = editBtn.dataset.ocena;
-                        const modal = new bootstrap.Modal(document.getElementById('editGradeModal'));
-                        modal.show();
-                    });
-
-                    const deleteBtn = document.createElement("button");
-                    deleteBtn.classList.add("btn", "btn-sm", "btn-danger", "ms-1", "delete-grade-btn");
-                    deleteBtn.textContent = "Usuń";
-                    deleteBtn.dataset.studentId = studentId;
-                    deleteBtn.dataset.gradeIndex = ulOceny.children.length;
-                    deleteBtn.addEventListener("click", async () => {
-                        if (!confirm("Na pewno chcesz usunąć ocenę?")) return;
-
-                        const res = await fetch('/delete-grade', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ studentId, gradeIndex: deleteBtn.dataset.gradeIndex })
-                        });
-
-                        if (res.ok) {
-                            li.remove();
-                        } else {
-                            alert('Błąd podczas usuwania oceny');
-                        }
-                    });
-
-                    li.appendChild(editBtn);
-                    li.appendChild(deleteBtn);
-                    ulOceny.appendChild(li);
-                }
-            }
-            form.reset();
-        } catch (err) {
-            komunikat.textContent = "Błąd sieci: " + err.message;
-            komunikat.classList.remove("d-none", "alert-success");
-            komunikat.classList.add("alert-danger");
-        }
+function xmlFetch(url, method, xmlBody) {
+    return fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/xml'
+        },
+        body: xmlBody
     });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     const modal = new bootstrap.Modal(document.getElementById('editGradeModal'));
 
-    document.querySelectorAll('.edit-grade-btn').forEach(button => {
-        button.addEventListener('click', () => {
-            document.getElementById('editStudentId').value = button.dataset.studentId;
-            document.getElementById('editGradeIndex').value = button.dataset.index;
-            document.getElementById('editPrzedmiot').value = button.dataset.przedmiot;
-            document.getElementById('editOcena').value = button.dataset.ocena;
-            modal.show();
+    document.querySelectorAll('.grade-item').forEach(el => {
+        el.addEventListener('dragstart', e => {
+            e.dataTransfer.setData("text/plain", el.dataset.grade);
+        });
+    });
+
+    document.querySelectorAll('.card').forEach(card => {
+        const studentId = card.dataset.studentId;
+
+        card.addEventListener('dragover', e => {
+            if (e.target.closest('.grade-slot')) return;
+            e.preventDefault();
+        });
+
+        card.addEventListener('drop', async e => {
+            if (e.target.closest('.grade-slot')) return;
+            e.preventDefault();
+            const ocena = e.dataTransfer.getData("text/plain");
+            const przedmiot = prompt("Podaj nazwę przedmiotu:");
+
+            if (!przedmiot) return;
+
+            const xml = `
+                <grade>
+                    <studentId>${studentId}</studentId>
+                    <przedmiot>${przedmiot}</przedmiot>
+                    <ocena>${ocena}</ocena>
+                </grade>
+            `;
+
+            const res = await xmlFetch("/add-grade-xml", "POST", xml);
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                const errorText = await res.text();
+                alert("Błąd dodawania oceny: " + errorText);
+            }
+        });
+    });
+
+    document.querySelectorAll('.grade-slot').forEach(li => {
+        li.addEventListener('dragover', e => e.preventDefault());
+
+        li.addEventListener('drop', async e => {
+            e.preventDefault();
+            const ocena = e.dataTransfer.getData("text/plain");
+            const studentId = li.closest('.card').dataset.studentId;
+            const gradeIndex = li.dataset.gradeIndex;
+            const przedmiot = li.dataset.przedmiot;
+
+            if (!gradeIndex || !przedmiot) {
+                alert("Brak danych przedmiotu lub indeksu oceny!");
+                return;
+            }
+
+            const xml = `
+                <grade>
+                    <studentId>${studentId}</studentId>
+                    <gradeIndex>${gradeIndex}</gradeIndex>
+                    <przedmiot>${przedmiot}</przedmiot>
+                    <ocena>${ocena}</ocena>
+                </grade>
+            `;
+
+            const res = await xmlFetch("/edit-grade-xml", "POST", xml);
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                const errorText = await res.text();
+                alert("Błąd przy zamianie oceny: " + errorText);
+            }
+        });
+    });
+
+    document.querySelectorAll('.grade-slot').forEach(li => {
+        li.addEventListener('click', async () => {
+            if (!confirm("Usunąć tę ocenę?")) return;
+
+            const studentId = li.closest('.card').dataset.studentId;
+            const gradeIndex = li.dataset.gradeIndex;
+
+            const xml = `
+                <grade>
+                    <studentId>${studentId}</studentId>
+                    <gradeIndex>${gradeIndex}</gradeIndex>
+                </grade>
+            `;
+
+            const res = await xmlFetch("/delete-grade-xml", "POST", xml);
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                const errorText = await res.text();
+                alert("Błąd podczas usuwania oceny: " + errorText);
+            }
         });
     });
 
@@ -120,27 +125,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (res.ok) {
             window.location.reload();
         } else {
-            alert('Błąd podczas edytowania oceny');
+            const errorText = await res.text();
+            alert("Błąd podczas edytowania oceny: " + errorText);
         }
-    });
-
-    document.querySelectorAll('.delete-grade-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-            if (!confirm("Na pewno chcesz usunąć ocenę?")) return;
-            const studentId = button.dataset.studentId;
-            const gradeIndex = button.dataset.gradeIndex;
-
-            const res = await fetch('/delete-grade', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studentId, gradeIndex })
-            });
-
-            if (res.ok) {
-                window.location.reload();
-            } else {
-                alert('Błąd podczas usuwania oceny');
-            }
-        });
     });
 });
