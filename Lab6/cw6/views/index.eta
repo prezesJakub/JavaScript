@@ -364,7 +364,7 @@
       function getTime(europe_city) {
           return new Promise(async (resolve, reject) => {
               try {
-                  const response = await fetch(`https://worldtimeapi.org/api/timezone/Europe/${encodeURIComponent(europe_city)}`);
+                  const response = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=Europe/${encodeURIComponent(europe_city)}`);
                   const data = await response.json();
 
                   if (response.status === 200) {
@@ -386,7 +386,7 @@
 
           try {
               const data = await getTime(city);
-              outputDiv.innerText = `Current time in ${city}: ${data.datetime}`;
+              outputDiv.innerText = `Current time in ${city}: ${data.date} ${data.time}`;
           } catch (error) {
               outputDiv.innerText = `Error: ${error}`;
           }
